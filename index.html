@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Psundai Dapp — Simple Flow</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root { color-scheme: dark; }
+    body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial; background:#0b0d10; color:#e8eaed; }
+    header { position:sticky; top:0; z-index:10; background:#0f1318; border-bottom:1px solid #1b1f24; padding:14px 16px; display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+    h1 { margin:0; font-size:18px; letter-spacing:.2px; }
+    .pill { border:1px solid #273142; background:#0f1724; border-radius:999px; padding:6px 10px; font-size:12px; }
+    main { max-width:900px; margin:0 auto; padding:18px; display:grid; gap:14px; }
+    .card { background:#0f141a; border:1px solid #1e2530; border-radius:14px; padding:14px; }
+    .muted { color:#9aa4b2; font-size:12px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:13px; }
+    .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .grid { display:grid; gap:12px; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); }
+    label { display:block; font-size:12px; color:#9aa4b2; margin:6px 0 4px; }
+    input { width:100%; padding:10px 12px; border-radius:10px; border:1px solid #263040; background:#0c1117; color:#e8eaed; outline:none; }
+    input:focus { border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.2); }
+    button { cursor:pointer; padding:9px 12px; border-radius:10px; border:1px solid #2b384d; background:#111824; color:#e8eaed; }
+    button.primary { background:linear-gradient(135deg,#1677ff,#7c55ff); border-color:#2751ff; }
+    .divider { height:1px; background:#192230; margin:10px 0; }
+    .break { word-break: break-all; overflow-wrap: anywhere; }
+    ol.steps { margin:0; padding-left:18px; display:grid; gap:12px; }
+    ol.steps li { line-height:1.4; }
+    .note { font-size:12px; color:#a9b3c2; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>☀️ Psundai Dapp — Guided Flow <span class="pill mono" id="net">Not connected</span></h1>
+    <div class="row">
+      <button id="btnSwitch">Switch to PulseChain</button>
+      <button id="btnConnect" class="primary">Connect Wallet</button>
+    </div>
+  </header>
+  <main>
+    <!-- Step-by-step flow -->
+    <section class="card">
+      <h3 style="margin:0 0 6px 0">Step-by-step Mint / Repay / Withdraw</h3>
+      <ol class="steps">
+        <li>
+          <b>Connect your wallet.</b>
+          <div class="row"><button id="s1_connect" class="primary">Connect</button><span class="note">Use http://localhost, not file://</span></div>
+        </li>
+        <li>
+          <b>Switch to PulseChain (chainId 369).</b>
+          <div class="row"><button id="s2_switch">Switch</button></div>
+        </li>
+        <li>
+          <b>Load token & vault info.</b>
+          <div class="row"><button id="s3_refresh">Refresh Info</button></div>
+        </li>
+        <li>
+          <b>(If using WPLS collateral) Approve the Vault to spend your WPLS.</b>
+          <label>Amount (WPLS)</label>
+          <div class="row"><input id="s4_wplsApproveAmt" placeholder="e.g. 100" style="max-width:200px;"/><button id="s4_wplsApprove" class="primary">Approve WPLS → Vault</button></div>
+        </li>
+        <li>
+          <b>Deposit WPLS (ERC-20 collateral).</b>
+          <label>Amount (WPLS)</label>
+          <div class="row"><input id="s5_depWPLS" placeholder="e.g. 50" style="max-width:200px;"/><button id="s5_depositWPLS" class="primary">Deposit WPLS</button></div>
+        </li>
+        <li>
+          <b>OR deposit native PLS.</b>
+          <label>Value (PLS)</label>
+          <div class="row"><input id="s6_depPLS" placeholder="e.g. 50" style="max-width:200px;"/><button id="s6_depositPLS">Deposit PLS</button></div>
+        </li>
+        <li>
+          <b>Check how much you can mint safely.</b>
+          <div class="row"><button id="s7_maxMint">Get Max Mintable</button><span class="mono" id="out_max">—</span></div>
+        </li>
+        <li>
+          <b>Mint pSUNDAI (creates stablecoin debt).</b>
+          <label>Mint amount (pSUNDAI)</label>
+          <div class="row"><input id="s8_mintAmt" placeholder="e.g. 25" style="max-width:200px;"/><button id="s8_mint" class="primary">Mint</button></div>
+        </li>
+        <li>
+          <b>(To repay later) Approve the Vault to spend your pSUNDAI.</b>
+          <label>Amount (pSUNDAI) or type <code>max</code></label>
+          <div class="row"><input id="s9_psApproveAmt" placeholder="e.g. max" style="max-width:200px;"/><button id="s9_psApprove">Approve pSUNDAI → Vault</button></div>
+        </li>
+        <li>
+          <b>Repay pSUNDAI debt.</b>
+          <label>Repay amount (pSUNDAI)</label>
+          <div class="row"><input id="s10_repayAmt" placeholder="e.g. 10" style="max-width:200px;"/><button id="s10_repay">Repay</button></div>
+        </li>
+        <li>
+          <b>Withdraw collateral (WPLS) after repaying enough.</b>
+          <label>Withdraw amount (WPLS)</label>
+          <div class="row"><input id="s11_wdrawWPLS" placeholder="e.g. 5" style="max-width:200px;"/><button id="s11_withdrawWPLS">Withdraw WPLS</button></div>
+        </li>
+        <li>
+          <b>OR withdraw native PLS.</b>
+          <label>Withdraw amount (PLS)</label>
+          <div class="row"><input id="s12_wdrawPLS" placeholder="e.g. 5" style="max-width:200px;"/><button id="s12_withdrawPLS">Withdraw PLS</button></div>
+        </li>
+        <li>
+          <b>Final check.</b>
+          <div class="row"><button id="s13_refresh">Refresh Info</button><span class="note">Confirm balances & ratios.</span></div>
+        </li>
+      </ol>
+    </section>
+
+    <!-- Overview -->
+    <section class="card">
+      <h3 style="margin:0 0 6px 0">Overview</h3>
+      <div class="grid">
+        <div>
+          <div class="muted">pSUNDAI Contract</div>
+          <div class="mono break" id="tokenAddr">—</div>
+          <div class="muted" style="margin-top:6px;">Token</div>
+          <div class="mono" id="tokenMeta">—</div>
+          <div class="muted" style="margin-top:6px;">Total Supply</div>
+          <div class="mono" id="totalSupply">—</div>
+          <div class="muted" style="margin-top:6px;">Your pSUNDAI</div>
+          <div class="mono" id="myPS">—</div>
+        </div>
+        <div>
+          <div class="muted">Vault Contract</div>
+          <div class="mono break" id="vaultAddr">—</div>
+          <div class="muted" style="margin-top:6px;">Your Collateral</div>
+          <div class="mono" id="vColl">—</div>
+          <div class="muted" style="margin-top:6px;">Your Debt</div>
+          <div class="mono" id="vDebt">—</div>
+          <div class="muted" style="margin-top:6px;">Ratio / Safe?</div>
+          <div class="mono" id="vRatio">—</div>
+          <div class="muted" style="margin-top:6px;">Liq. Price</div>
+          <div class="mono" id="vLiq">—</div>
+          <div class="muted" style="margin-top:6px;">Deposit Cooldown</div>
+          <div class="mono" id="vCooldown">—</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="muted">Status</div>
+      <div id="status" class="mono">Ready.</div>
+    </section>
+  </main>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
